@@ -32,6 +32,10 @@ class RetryChunkLoadPlugin {
           `
               : '"cache-bust=true"';
 
+          const isRetryWithCacheBustingQSPEnabled = () =>
+              this.options.isRetryWithCacheBustingQSPEnabled ?
+              `(${this.options.isRetryWithCacheBustingQSPEnabled})()` : false;
+
           const maxRetryValueFromOptions = Number(this.options.maxRetries);
           const maxRetries =
             Number.isInteger(maxRetryValueFromOptions) &&
@@ -77,8 +81,11 @@ class RetryChunkLoadPlugin {
                     chunk[1](error);
                     installedChunks[chunkId] = undefined;
                   } else {
-                    var cacheBust = ${getCacheBustString()} + retryAttemptString;
-                    var retryScript = loadScript(jsonpScriptSrc(chunkId) + '?' + cacheBust, (retries-1));
+                    var retryScript = loadScript(jsonpScriptSrc(chunkId), 0);
+                    if (!${isRetryWithCacheBustingQSPEnabled()}) {
+                      var cacheBust = ${getCacheBustString()} + retryAttemptString;
+                      retryScript = loadScript(jsonpScriptSrc(chunkId) + '?' + cacheBust, (retries-1));
+                    }
                     document.head.appendChild(retryScript);
                   }
                 } else {
