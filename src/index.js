@@ -28,7 +28,7 @@ class RetryChunkLoadPlugin {
           const getCacheBustString = () =>
             this.options.cacheBust
               ? `
-            (${this.options.cacheBust})();
+            (${this.options.cacheBust})()
           `
               : '"cache-bust=true"';
 
