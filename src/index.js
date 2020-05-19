@@ -38,8 +38,8 @@ class RetryChunkLoadPlugin {
             this.options.isRetryWithCacheBustingQSPEnabled ?
             `(${this.options.isRetryWithCacheBustingQSPEnabled})()` : false;
 
-          const retryCallback = () => this.options.retryCallback ?
-            `(${this.options.retryCallback})()` : undefined;
+          const retryCallback = (errorType) => this.options.retryCallback ?
+            `(${this.options.retryCallback})(${errorType})` : undefined;
 
           const maxRetryValueFromOptions = Number(this.options.maxRetries);
           const maxRetries =
@@ -89,7 +89,7 @@ class RetryChunkLoadPlugin {
                     var retryScript = loadScript(jsonpScriptSrc(chunkId), 0);
                     if (${isRetryWithCacheBustingQSPEnabled()}) {
                       var cacheBust = ${getCacheBustString()} + retryAttemptString;
-                      ${retryCallback()};
+                      ${retryCallback(`event.type`)};
                       retryScript = loadScript(jsonpScriptSrc(chunkId) + '?' + cacheBust, (retries-1));
                     }
                     document.head.appendChild(retryScript);
