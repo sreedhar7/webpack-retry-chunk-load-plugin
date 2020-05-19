@@ -9,7 +9,9 @@ class RetryChunkLoadPlugin {
 
   apply(compiler) {
     compiler.hooks.compilation.tap(pluginName, compilation => {
-      const { mainTemplate } = compilation;
+      const {
+        mainTemplate
+      } = compilation;
       if (mainTemplate.hooks.jsonpScript) {
         // Adapted from https://github.com/webpack/webpack/blob/11e94dd2d0a8d8baae75e715ff8a69f27a9e3014/lib/web/JsonpMainTemplatePlugin.js#L145-L210
         mainTemplate.hooks.jsonpScript.tap(pluginName, (source, chunk) => {
@@ -26,22 +28,25 @@ class RetryChunkLoadPlugin {
         `;
 
           const getCacheBustString = () =>
-            this.options.cacheBust
-              ? `
+            this.options.cacheBust ?
+            `
             (${this.options.cacheBust})()
-          `
-              : '"cache-bust=true"';
+          ` :
+            '"cache-bust=true"';
 
           const isRetryWithCacheBustingQSPEnabled = () =>
-              this.options.isRetryWithCacheBustingQSPEnabled ?
-              `(${this.options.isRetryWithCacheBustingQSPEnabled})()` : false;
+            this.options.isRetryWithCacheBustingQSPEnabled ?
+            `(${this.options.isRetryWithCacheBustingQSPEnabled})()` : false;
+
+          const retryCallback = () => this.options.retryCallback ?
+            `(${this.options.retryCallback})()` : undefined;
 
           const maxRetryValueFromOptions = Number(this.options.maxRetries);
           const maxRetries =
             Number.isInteger(maxRetryValueFromOptions) &&
-            maxRetryValueFromOptions > 0
-              ? maxRetryValueFromOptions
-              : 1;
+            maxRetryValueFromOptions > 0 ?
+            maxRetryValueFromOptions :
+            1;
 
           const scriptWithRetry = `
           // create error before stack unwound to get useful stacktrace later
@@ -82,8 +87,9 @@ class RetryChunkLoadPlugin {
                     installedChunks[chunkId] = undefined;
                   } else {
                     var retryScript = loadScript(jsonpScriptSrc(chunkId), 0);
-                    if (!${isRetryWithCacheBustingQSPEnabled()}) {
+                    if (${isRetryWithCacheBustingQSPEnabled()}) {
                       var cacheBust = ${getCacheBustString()} + retryAttemptString;
+                      ${retryCallback()};
                       retryScript = loadScript(jsonpScriptSrc(chunkId) + '?' + cacheBust, (retries-1));
                     }
                     document.head.appendChild(retryScript);
@@ -104,8 +110,7 @@ class RetryChunkLoadPlugin {
         `;
 
           const currentChunkName = chunk.name;
-          const addRetryCode =
-            !this.options.chunks ||
+          const addRetryCode = !this.options.chunks ||
             this.options.chunks.includes(currentChunkName);
           const script = addRetryCode ? scriptWithRetry : source;
 
