@@ -38,8 +38,8 @@ class RetryChunkLoadPlugin {
               : false;
 
           const preRetryCallback = (errorType, chunkId) =>
-            this.options.retryCallback
-              ? `(${this.options.retryCallback})(${errorType}, ${chunkId})`
+            this.options.preRetryCallback
+              ? `(${this.options.preRetryCallback})(${errorType}, ${chunkId})`
               : undefined;
 
           const maxRetryValueFromOptions = Number(this.options.maxRetries);
