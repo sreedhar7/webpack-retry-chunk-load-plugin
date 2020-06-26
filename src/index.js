@@ -1,5 +1,3 @@
-const prettier = require('prettier');
-
 const pluginName = 'RetryChunkLoadPlugin';
 
 class RetryChunkLoadPlugin {
@@ -32,12 +30,12 @@ class RetryChunkLoadPlugin {
           `
               : '"cache-bust=true"';
 
-          const shouldRetry = (errorType) =>
+          const shouldRetry = errorType =>
             this.options.shouldRetry
               ? `(${this.options.shouldRetry})(${errorType})`
               : false;
 
-          const shouldCacheBust = (errorType) =>
+          const shouldCacheBust = errorType =>
             this.options.shouldCacheBust
               ? `(${this.options.shouldCacheBust})(${errorType})`
               : false;
@@ -93,7 +91,9 @@ class RetryChunkLoadPlugin {
                     chunk[1](error);
                     installedChunks[chunkId] = undefined;
                   } else {
-                    var shouldCacheBust = ${shouldCacheBust(`event && event.type`)};
+                    var shouldCacheBust = ${shouldCacheBust(
+                      `event && event.type`
+                    )};
                     var cacheBust = shouldCacheBust ? ('?' + ${getCacheBustString()} + retryAttemptString) : '';
                     ${preRetryCallback(
                       `event && event.type`,
@@ -124,10 +124,7 @@ class RetryChunkLoadPlugin {
             this.options.chunks.includes(currentChunkName);
           const script = addRetryCode ? scriptWithRetry : source;
 
-          return prettier.format(script, {
-            singleQuote: true,
-            parser: 'babel'
-          });
+          return script;
         });
       }
     });
