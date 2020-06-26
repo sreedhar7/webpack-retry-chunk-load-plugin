@@ -32,9 +32,9 @@ class RetryChunkLoadPlugin {
           `
               : '"cache-bust=true"';
 
-          const isRetryWithCacheBustingQSPEnabled = () =>
+          const isRetryWithCacheBustingQSPEnabled = (errorType, retryAttempt) =>
             this.options.isRetryWithCacheBustingQSPEnabled
-              ? `(${this.options.isRetryWithCacheBustingQSPEnabled})()`
+              ? `(${this.options.isRetryWithCacheBustingQSPEnabled})(${errorType}, ${retryAttempt})`
               : false;
 
           const preRetryCallback = (errorType, chunkId, url) =>
@@ -88,7 +88,7 @@ class RetryChunkLoadPlugin {
                     installedChunks[chunkId] = undefined;
                   } else {
                     var retryScript = loadScript(jsonpScriptSrc(chunkId), 0);
-                    if (${isRetryWithCacheBustingQSPEnabled()}) {
+                    if (${isRetryWithCacheBustingQSPEnabled(`event && event.type`, `retryAttempt`)}) {
                       var cacheBust = ${getCacheBustString()} + retryAttemptString;
                       ${preRetryCallback(
                         `event && event.type`,
