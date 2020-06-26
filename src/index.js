@@ -32,9 +32,14 @@ class RetryChunkLoadPlugin {
           `
               : '"cache-bust=true"';
 
-          const isRetryWithCacheBustingQSPEnabled = (errorType, retryAttempt) =>
-            this.options.isRetryWithCacheBustingQSPEnabled
-              ? `(${this.options.isRetryWithCacheBustingQSPEnabled})(${errorType}, ${retryAttempt})`
+          const shouldRetry = (errorType) =>
+            this.options.shouldRetry
+              ? `(${this.options.shouldRetry})(${errorType})`
+              : false;
+
+          const shouldCacheBust = (errorType) =>
+            this.options.shouldCacheBust
+              ? `(${this.options.shouldCacheBust})(${errorType})`
               : false;
 
           const preRetryCallback = (errorType, chunkId, url) =>
@@ -77,26 +82,25 @@ class RetryChunkLoadPlugin {
               var chunk = installedChunks[chunkId];
               if (chunk !== 0) {
                 if (chunk) {
-                  if (retries === 0) {
+                  var shouldRetry = ${shouldRetry(`event && event.type`)};
+                  if (!shouldRetry || retries === 0) {
                     var errorType = event && (event.type === 'load' ? 'missing' : event.type);
                     var realSrc = event && event.target && event.target.src;
-                    error.message = 'Loading chunk ' + chunkId + ' failed after ${maxRetries} retries.\\n(' + errorType + ': ' + realSrc + ')';
+                    error.message = 'Loading chunk ' + chunkId + ' failed after ' + (retryAttempt - 1) + ' retries.\\n(' + errorType + ': ' + realSrc + ')';
                     error.name = 'ChunkLoadError';
                     error.type = errorType;
                     error.request = realSrc;
                     chunk[1](error);
                     installedChunks[chunkId] = undefined;
                   } else {
-                    var retryScript = loadScript(jsonpScriptSrc(chunkId), 0);
-                    if (${isRetryWithCacheBustingQSPEnabled(`event && event.type`, `retryAttempt`)}) {
-                      var cacheBust = ${getCacheBustString()} + retryAttemptString;
-                      ${preRetryCallback(
-                        `event && event.type`,
-                        `chunkId`,
-                        `event && event.target && event.target.src`
-                      )};
-                      retryScript = loadScript(jsonpScriptSrc(chunkId) + '?' + cacheBust, (retries-1));
-                    }
+                    var shouldCacheBust = ${shouldCacheBust(`event && event.type`)};
+                    var cacheBust = shouldCacheBust ? ('?' + ${getCacheBustString()} + retryAttemptString) : '';
+                    ${preRetryCallback(
+                      `event && event.type`,
+                      `chunkId`,
+                      `event && event.target && event.target.src`
+                    )};
+                    var retryScript = loadScript(jsonpScriptSrc(chunkId) + cacheBust, (retries-1));
                     document.head.appendChild(retryScript);
                   }
                 } else {

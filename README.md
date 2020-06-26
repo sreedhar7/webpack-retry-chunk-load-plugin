@@ -26,8 +26,11 @@ plugins: [
     }`,
     // optional function called just before retry with errorType, chunkId, url as params
     preRetryCallback: `function(errorType, chunkId, url) {}`,
-    // callback used to enable/disable the retry. Can be used for feature rollout via feature flags.
-    isRetryWithCacheBustingQSPEnabled: `function() {}`,
+    // callback used to enable/disable the retry based on error type. 
+    // Can also be used for feature rollout via feature flags.
+    shouldRetry: `function(errorType) { return true; }`,
+    // callback used to enable/disable the cache busting during retry based on error type.
+    shouldCacheBust: `function(errorType) { return true; }`,
     // optional value to set the maximum number of retries to load the chunk. Default is 1
     maxRetries: 5,
     // optional list of chunks to which retry script should be injected
